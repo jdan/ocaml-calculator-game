@@ -49,3 +49,34 @@ let () =
     ("/2",  fun n -> n / 2)  ;
   ]
   |> print_solutions;
+
+  print_newline ();
+  print_endline "Level 24";
+  solve 210 0 5 [
+    ("-5", fun n -> n - 5) ;
+    ("+5", fun n -> n + 5) ;
+    ("5",  fun n -> 5 + n * 10) ;
+    ("2",  fun n -> 2 + n * 10) ;
+  ]
+  |> print_solutions;
+
+  (* Swap `a` digits for `b`s in `n` *)
+  let rec swap n a b =
+    if n < 10 then
+      if n = a then b else n
+    else
+      let last_digit = n mod 10 in
+      let rest = swap (n / 10) a b in
+
+      10 * rest +
+      (if last_digit = a then b else last_digit) in
+
+  print_newline ();
+  print_endline "Level 30";
+  solve 2321 0 6 [
+    ("1", fun n -> 1 + n * 10) ;
+    ("2", fun n -> 2 + n * 10) ;
+    ("1=>2", fun n -> swap n 1 2) ;
+    ("2=>3", fun n -> swap n 2 3) ;
+  ]
+  |> print_solutions;
