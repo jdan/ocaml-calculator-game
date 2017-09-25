@@ -9,7 +9,17 @@ let rec combinations options = function
       options
     |> List.flatten
 
-type button = string * (int -> int)
+type button =
+  | Add of int
+  | Subtract of int
+  | Multiply of int
+  | Divide of int
+  | Append of int
+  | PlusMinus
+  | Swap of int * int
+  | ShiftLeft
+  | Reverse
+
 type state = {
   goal: int;
   init: int;
@@ -17,17 +27,16 @@ type state = {
   buttons: button list;
 }
 
-let solve { goal; init; moves; buttons } =
-  (* Get all button sequences of length `moves` *)
-  let all_combinations = combinations buttons moves in
-
-  (* Filter those which evaluate to `goal` *)
-  List.filter
-    (fun combiation ->
-       goal =
-       (* Reduce the sequence of buttons *)
-       List.fold_left (fun acc (_, fn) -> fn acc) init combiation)
-    all_combinations
+let string_of_button = function
+  | Add n -> "+" ^ (string_of_int n)
+  | Subtract n -> "-" ^ (string_of_int n)
+  | Multiply n -> "x" ^ (string_of_int n)
+  | Divide n -> "/" ^ (string_of_int n)
+  | Append n -> string_of_int n
+  | PlusMinus -> "+/-"
+  | Swap (a, b) -> (string_of_int a) ^ "=>" ^ (string_of_int b)
+  | ShiftLeft -> "<<"
+  | Reverse -> "Reverse"
 
 (* Swap `a` digits for `b`s in `n` *)
 let rec swap n a b =
@@ -48,12 +57,35 @@ let reverse n =
   in
   inner n 0
 
+let press_button v = function
+  | Add n -> v + n
+  | Subtract n -> v - n
+  | Multiply n -> v * n
+  | Divide n -> v / n
+  | Append n -> v * 10 + n
+  | PlusMinus -> v * (-1)
+  | Swap (a, b) -> swap v a b
+  | ShiftLeft -> v / 10
+  | Reverse -> reverse v
+
+let solve { goal; init; moves; buttons } =
+  (* Get all button sequences of length `moves` *)
+  let all_combinations = combinations buttons moves in
+
+  (* Filter those which evaluate to `goal` *)
+  List.filter
+    (fun combiation ->
+       goal =
+       (* Reduce the sequence of buttons *)
+       List.fold_left (fun acc button -> press_button acc button) init combiation)
+    all_combinations
+
 let print_solutions solns =
   List.map
     (fun solution ->
        (* Join strings with " " *)
        List.fold_left
-         (fun acc (button, _) -> acc ^ " " ^ button)
+         (fun acc button -> acc ^ " " ^ (string_of_button button))
          ""
          solution)
     solns
@@ -69,9 +101,9 @@ let () =
     init = 99 ;
     moves = 3 ;
     buttons = [
-      ("-8",  fun n -> n - 8)  ;
-      ("x11", fun n -> n * 11) ;
-      ("<<",  fun n -> n / 10) ;
+      Subtract 8 ;
+      Multiply 11 ;
+      ShiftLeft ;
     ]
   };
 
@@ -81,9 +113,9 @@ let () =
     init = 0 ;
     moves = 5 ;
     buttons = [
-      ("+8",  fun n -> n + 8)  ;
-      ("x10", fun n -> n * 10) ;
-      ("/2",  fun n -> n / 2)  ;
+      Add 8 ;
+      Multiply 10 ;
+      Divide 2;
     ] ;
   };
 
@@ -93,10 +125,10 @@ let () =
     init = 0 ;
     moves = 5 ;
     buttons = [
-      ("-5", fun n -> n - 5) ;
-      ("+5", fun n -> n + 5) ;
-      ("5",  fun n -> 5 + n * 10) ;
-      ("2",  fun n -> 2 + n * 10) ;
+      Subtract 5 ;
+      Add 5 ;
+      Append 5 ;
+      Append 2 ;
     ] ;
   };
 
@@ -106,10 +138,10 @@ let () =
     init = 0 ;
     moves = 6 ;
     buttons = [
-      ("1", fun n -> 1 + n * 10) ;
-      ("2", fun n -> 2 + n * 10) ;
-      ("1=>2", fun n -> swap n 1 2) ;
-      ("2=>3", fun n -> swap n 2 3) ;
+      Append 1 ;
+      Append 2 ;
+      Swap (1, 2) ;
+      Swap (2, 3) ;
     ] ;
   };
 
@@ -119,10 +151,10 @@ let () =
     init = 44 ;
     moves = 5 ;
     buttons = [
-      ("+9", (+) 9) ;
-      ("/2", fun n -> n / 2) ;
-      ("x4", ( * ) 4) ;
-      ("+/-", ( * ) (-1)) ;
+      Add 9 ;
+      Divide 2 ;
+      Multiply 4 ;
+      PlusMinus ;
     ] ;
   };
 
@@ -132,8 +164,8 @@ let () =
     init = 1101 ;
     moves = 4 ;
     buttons = [
-      ("-1", fun n -> n - 1) ;
-      ("Reverse", reverse) ;
+      Subtract 1 ;
+      Reverse ;
     ] ;
   };
 
@@ -143,10 +175,24 @@ let () =
     init = 7 ;
     moves = 5 ;
     buttons = [
-      ("-9", fun n -> n - 9) ;
-      ("x3", ( * ) 3) ;
-      ("+4", (+) 4) ;
-      ("+/-", ( * ) (-1)) ;
-      ("Reverse", reverse) ;
+      Subtract 9 ;
+      Multiply 3 ;
+      Add 4 ;
+      PlusMinus ;
+      Reverse ;
+    ] ;
+  };
+
+  print_newline ();
+  solve_and_print "Level 84" {
+    goal = 196 ;
+    init = 0 ;
+    moves = 8 ;
+    buttons = [
+      Append 1 ;
+      Add 12 ;
+      Multiply 13 ;
+      Reverse ;
+      ShiftLeft ;
     ] ;
   };
