@@ -19,6 +19,8 @@ type button =
   | Swap of int * int
   | ShiftLeft
   | Reverse
+  | Sum
+  | Mirror
 
 type state = {
   goal: int;
@@ -26,6 +28,10 @@ type state = {
   moves: int;
   buttons: button list;
 }
+
+type value =
+  | Value of int
+  | Error
 
 let string_of_button = function
   | Add n -> "+" ^ (string_of_int n)
@@ -37,10 +43,12 @@ let string_of_button = function
   | Swap (a, b) -> (string_of_int a) ^ "=>" ^ (string_of_int b)
   | ShiftLeft -> "<<"
   | Reverse -> "Reverse"
+  | Sum -> "SUM"
+  | Mirror -> "Mirror"
 
 (* Swap `a` digits for `b`s in `n` *)
 let rec swap n a b =
-  if n < 10 then
+  if abs n < 10 then
     if n = a then b else n
   else
     let last_digit = n mod 10 in
@@ -51,11 +59,23 @@ let rec swap n a b =
 
 let reverse n =
   let rec inner n acc =
-    if n < 10 then 10 * acc + n
+    if abs n < 10 then 10 * acc + n
     else
       inner (n / 10) (10 * acc + (n mod 10))
   in
   inner n 0
+
+let rec sum n =
+  if abs n < 10 then n
+  else (n mod 10) + sum (n / 10)
+
+let radix n =
+  1 + (n |> abs |> float_of_int |> log10 |> int_of_float)
+
+let mirror v =
+  let pow_int a b = (float_of_int a) ** (float_of_int b) |> int_of_float in
+  let rev = reverse v in
+  v * (pow_int 10 (radix rev)) + rev
 
 let press_button v = function
   | Add n -> v + n
@@ -67,17 +87,41 @@ let press_button v = function
   | Swap (a, b) -> swap v a b
   | ShiftLeft -> v / 10
   | Reverse -> reverse v
+  | Sum -> sum v
+  | Mirror -> mirror v
 
 let solve { goal; init; moves; buttons } =
   (* Get all button sequences of length `moves` *)
   let all_combinations = combinations buttons moves in
 
+  let value_of_result button prev_value value =
+    (* Can only store 6 digits in the calculator *)
+    if radix value > 6
+    then Error
+    else
+      match button with
+      (* Can't swap numbers that aren't there *)
+      | Swap _ -> if prev_value = value then Error else Value value
+      | _ -> Value value in
+
+  let value_after_button_press acc button =
+    match acc with
+    | Error -> Error
+    | Value v -> press_button v button
+                 |> value_of_result button v in
+
   (* Filter those which evaluate to `goal` *)
   List.filter
-    (fun combiation ->
-       goal =
+    (fun combination ->
        (* Reduce the sequence of buttons *)
-       List.fold_left (fun acc button -> press_button acc button) init combiation)
+       let result = List.fold_left
+           value_after_button_press
+           (Value init)
+           combination in
+
+       match result with
+       | Error -> false
+       | Value v -> goal == v)
     all_combinations
 
 let print_solutions solns =
@@ -194,5 +238,18 @@ let () =
       Multiply 13 ;
       Reverse ;
       ShiftLeft ;
+    ] ;
+  };
+
+  print_newline ();
+  solve_and_print "Level 124" {
+    goal = 20 ;
+    init = 125 ;
+    moves = 7 ;
+    buttons = [
+      Swap (6, 2) ;
+      Append 0 ;
+      Mirror ;
+      Sum ;
     ] ;
   };
