@@ -236,14 +236,13 @@ let () =
   };
 
   print_newline ();
-  solve_and_print "Level 84" {
-    goal = 196 ;
+  solve_and_print "Level 72" {
+    goal = 28 ;
     init = 0 ;
-    moves = 8 ;
+    moves = 7 ;
     buttons = [
-      Append 1 ;
-      Add 12 ;
-      Multiply 13 ;
+      Add 6 ;
+      Subtract 3 ;
       Reverse ;
       ShiftLeft ;
     ] ;
