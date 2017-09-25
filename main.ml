@@ -101,7 +101,15 @@ let solve { goal; init; moves; buttons } =
     else
       match button with
       (* Can't swap numbers that aren't there *)
-      | Swap _ -> if prev_value = value then Error else Value value
+      | Swap _ ->
+        if prev_value = value
+        then Error
+        else Value value
+      (* Can only divide numbers evenly *)
+      | Divide n ->
+        if 0 != prev_value mod n
+        then Error
+        else Value value
       | _ -> Value value in
 
   let value_after_button_press acc button =
@@ -251,5 +259,19 @@ let () =
       Append 0 ;
       Mirror ;
       Sum ;
+    ] ;
+  };
+
+  print_newline ();
+  solve_and_print "Level 129" {
+    goal = 18 ;
+    init = 140 ;
+    moves = 6 ;
+    buttons = [
+      Subtract 3 ;
+      Add 9 ;
+      Divide 12 ;
+      Mirror ;
+      ShiftLeft ;
     ] ;
   };
